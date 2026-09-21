@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', 'http://127.0.0.1:8000/auth/google/callback'),
     ],
 
+    'turnstile' => [
+        'key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY', '3x00000000000000000000FF'),
+        'secret' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA'),
+    ],
+
 ];

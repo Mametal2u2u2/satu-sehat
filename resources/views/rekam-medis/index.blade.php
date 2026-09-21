@@ -1,5 +1,14 @@
 <x-app-layout>
     <div x-data="{ 
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-rm') {
+                this.showTambahModal = true;
+            }
+            if (urlParams.get('modal') === 'cetak') {
+                this.showCetakModal = true;
+            }
+        },
         showTambahModal: false,
         showCetakModal: false,
         activeTab: 'kunjungan',
@@ -544,7 +553,9 @@
                 this.toast.show = false;
             }, 4000);
         }
-    }">
+    }"
+    x-on:open-modal.window="if ($event.detail.name === 'tambah-rm' || $event.detail.name === 'tambah') showTambahModal = true; if ($event.detail.name === 'cetak') showCetakModal = true;"
+    >
 
         <!-- Toast Notification -->
         <div x-show="toast.show" 

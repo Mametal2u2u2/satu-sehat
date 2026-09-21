@@ -9,38 +9,48 @@
         <h1 class="font-bold text-lg text-gray-900">Ambil Antrian</h1>
     </div>
 
-    <!-- Success Card -->
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 text-center mx-2">
-        <!-- Green Checkmark -->
-        <div class="w-16 h-16 mx-auto mb-5 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
-            <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-        </div>
+    <!-- Detail Card Container -->
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-3xl shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100 p-8 text-center">
+            <!-- Green Checkmark -->
+            <div class="w-16 h-16 mx-auto mb-5 bg-[#009669] rounded-full flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
 
-        <h2 class="text-base font-bold text-gray-900 mb-3">Antrian Berhasil Diambil</h2>
+            <h2 class="text-lg font-black text-slate-900 mb-1">Antrian Berhasil Diambil</h2>
+            <p class="text-xs text-slate-500 mb-4">Simpan bukti nomor antrian ini saat tiba di klinik.</p>
 
-        <!-- Nomor Antrian -->
-        <div class="text-4xl font-extrabold text-emerald-600 tracking-wider mb-5">D-034</div>
+            <!-- Nomor Antrian -->
+            <div class="inline-block px-6 py-2 bg-emerald-50 rounded-2xl border border-emerald-100 mb-6">
+                <span class="text-xs font-semibold text-emerald-600 block uppercase tracking-wider">Nomor Antrian Anda</span>
+                <span class="text-4xl font-black text-[#009669] tracking-tight">D-034</span>
+            </div>
 
-        <!-- QR Code -->
-        <div class="flex justify-center mb-5">
-            <div class="w-44 h-44 bg-white p-2 flex items-center justify-center">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SATUSEHAT-LPSK-D034-POLIGIGI&format=png&color=000000" alt="QR Code" class="w-full h-full">
+            <!-- QR Code Box -->
+            <div class="flex justify-center mb-6">
+                <div class="w-48 h-48 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SATUSEHAT-LPSK-D034-POLIGIGI&format=png&color=000000" alt="QR Code" class="w-full h-full object-contain">
+                </div>
+            </div>
+
+            <!-- Poli & Dokter Info -->
+            <div class="bg-slate-50 rounded-2xl p-3.5 mb-6 border border-slate-100">
+                <p class="text-sm font-black text-slate-900 mb-0.5">Poli Gigi & Mulut</p>
+                <p class="text-xs text-slate-500 font-medium">drg. Maya Putri • Estimasi Jam: 10:15 WIB</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2.5 font-sans">
+                <a href="{{ route('antrian.index') }}" wire:navigate class="w-full flex items-center justify-center py-3 bg-[#009669] text-white rounded-2xl font-bold text-xs hover:bg-[#007a55] active:scale-[0.99] transition-all shadow-sm">
+                    Lihat Daftar Antrian
+                </a>
+                <a href="{{ route('dashboard') }}" wire:navigate class="w-full flex items-center justify-center py-3 border border-slate-200 text-slate-700 rounded-2xl font-bold text-xs hover:bg-slate-50 transition-colors">
+                    Kembali ke Beranda
+                </a>
             </div>
         </div>
-
-        <!-- Poli Info -->
-        <p class="text-sm font-bold text-gray-900 mb-0.5">Poli Gigi</p>
-        <p class="text-sm text-gray-500 mb-6">drg. Maya Putri</p>
-
-        <!-- Action Buttons -->
-        <a href="{{ route('antrian.index') }}" wire:navigate class="w-full flex items-center justify-center py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors mb-3 shadow-sm">
-            Lihat Detail Antrian
-        </a>
-        <a href="{{ route('dashboard') }}" wire:navigate class="w-full flex items-center justify-center py-3.5 border-2 border-emerald-600 text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-colors">
-            Kembali ke Beranda
-        </a>
     </div>
 
     <div class="h-8"></div>

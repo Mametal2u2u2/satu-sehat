@@ -1,7 +1,7 @@
 <x-app-layout>
     <!-- Header with Back Button -->
     <div class="flex items-center gap-3 mb-6">
-        <a href="{{ route('dashboard') }}" wire:navigate class="p-2 text-gray-500 hover:text-gray-900">
+        <a href="{{ url()->previous() !== url()->current() ? url()->previous() : (request()->is('admin*') ? route('admin.dashboard') : route('dashboard')) }}" class="p-2 text-gray-500 hover:text-gray-900 rounded-xl hover:bg-gray-100 transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>

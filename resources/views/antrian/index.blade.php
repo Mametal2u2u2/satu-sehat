@@ -1,5 +1,14 @@
 <x-app-layout>
     <div x-data="{ 
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-pasien') {
+                this.showTambahPasienModal = true;
+            }
+            if (urlParams.get('modal') === 'panggil') {
+                this.showPanggilAntrianModal = true;
+            }
+        },
         showTambahPasienModal: false, 
         showPanggilAntrianModal: false, 
         searchQuery: '', 
@@ -60,7 +69,12 @@
             }
         },
         addPatientSubmit() {
-            if (!this.newPatient.name.trim()) return;
+            if (!this.newPatient.name.trim()) {
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: { type: 'error', title: 'Input Gagal', message: 'Nama pasien wajib diisi untuk menerbitkan nomor antrian!' }
+                }));
+                return;
+            }
             
             // Generate queue prefix based on poli
             let prefix = 'A';
@@ -70,10 +84,11 @@
             // Count existing queues of this prefix
             let count = this.queues.filter(q => q.no.startsWith(prefix)).length + 1;
             let queueNo = prefix + '-' + String(count).padStart(3, '0');
+            let patientName = this.newPatient.name;
 
             this.queues.unshift({
                 no: queueNo,
-                name: this.newPatient.name,
+                name: patientName,
                 poli: this.newPatient.poli,
                 doctor: this.newPatient.doctor,
                 status: 'Menunggu',
@@ -83,6 +98,10 @@
 
             this.newPatient.name = '';
             this.showTambahPasienModal = false;
+
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { type: 'success', title: 'Nomor Antrian Terbit', message: 'Antrian ' + queueNo + ' (' + patientName + ') berhasil didaftarkan.' }
+            }));
         },
         triggerCall(queueNo) {
             this.callingNumber = queueNo;
@@ -99,6 +118,10 @@
                 this.queues[qIndex].status = 'Diperiksa';
                 this.queues[qIndex].status_color = 'blue';
             }
+
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { type: 'info', title: 'Panggilan Antrian', message: 'Memanggil nomor ' + queueNo + ' menuju ruang pemeriksaan.' }
+            }));
         },
         callNextAvailable() {
             // Find first queue with status 'Menunggu'
@@ -106,7 +129,9 @@
             if (nextQ) {
                 this.triggerCall(nextQ.no);
             } else {
-                alert('Tidak ada antrian menunggu saat ini.');
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: { type: 'warning', title: 'Antrian Kosong', message: 'Tidak ada antrian dengan status menunggu saat ini.' }
+                }));
             }
         },
         finishQueue(queueNo) {
@@ -124,7 +149,9 @@
                 return matchSearch && matchPoli;
             });
         }
-    }">
+    }"
+    x-on:open-modal.window="if ($event.detail.name === 'tambah-pasien' || $event.detail.name === 'tambah') showTambahPasienModal = true; if ($event.detail.name === 'panggil-antrian' || $event.detail.name === 'panggil') showPanggilAntrianModal = true;"
+    >
 
         <!-- Top Header & Action Buttons -->
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

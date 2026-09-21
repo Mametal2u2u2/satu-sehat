@@ -1,5 +1,11 @@
 <x-app-layout>
     <div x-data="{
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-jadwal') {
+                this.showTambahJadwalModal = true;
+            }
+        },
         showTambahJadwalModal: false,
         selectedDay: 'Semua Hari',
         selectedPoli: 'Semua Poli',
@@ -84,7 +90,9 @@
                 return matchDay && matchPoli;
             });
         }
-    }">
+    }"
+    x-on:open-modal.window="if ($event.detail.name === 'tambah-jadwal' || $event.detail.name === 'tambah') showTambahJadwalModal = true;"
+    >
 
         <!-- Top Header & Action Buttons -->
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
