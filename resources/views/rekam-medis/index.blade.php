@@ -1,15 +1,25 @@
+@php
+    $user = auth()->user();
+    $isStaff = $user && $user->hasAnyRole(['Super Admin', 'Admin Klinik', 'Dokter', 'Perawat', 'Fisioterapis', 'Apoteker', 'Approver']);
+@endphp
+
 <x-app-layout>
     <div x-data="{ 
         init() {
             const urlParams = new URLSearchParams(window.location.search);
+            @if($isStaff)
             if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-rm') {
                 this.showTambahModal = true;
             }
+            @endif
             if (urlParams.get('modal') === 'cetak') {
                 this.showCetakModal = true;
             }
+            if (urlParams.get('tab') === 'resep') {
+                this.activeTab = 'resep';
+            }
         },
-        showTambahModal: false,
+        showTambahModal: false, 
         showCetakModal: false,
         activeTab: 'kunjungan',
         searchQuery: '',
@@ -554,298 +564,352 @@
             }, 4000);
         }
     }"
-    x-on:open-modal.window="if ($event.detail.name === 'tambah-rm' || $event.detail.name === 'tambah') showTambahModal = true; if ($event.detail.name === 'cetak') showCetakModal = true;"
-    >
-
-        <!-- Toast Notification -->
+    x-on:open-modal.window="if ($event.detail.name === 'tambah-rm' || $event.detail.name === 'tambah') showTambahModal = true; if ($event.detail.name === 'cetak') showCetakModal = true;"        <!-- Toast Notification -->
         <div x-show="toast.show" 
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+             x-transition:enter="transition ease-out duration-200 transform"
+             x-transition:enter-start="opacity-0 translate-y-1 scale-98"
              x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave="transition ease-in duration-150 transform"
              x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-             x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-             class="fixed top-5 right-5 z-[9999] max-w-md bg-white border border-emerald-200 shadow-xl rounded-2xl p-4 flex items-center gap-3 text-sm text-gray-800"
+             x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+             class="fixed top-4 right-4 z-50 max-w-sm bg-white border border-slate-200 shadow-lg rounded-lg p-3.5 flex items-center gap-3 text-xs text-slate-800"
              style="display: none;">
-            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <div class="w-8 h-8 rounded-md bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <div class="flex-1">
-                <p class="font-bold text-gray-900">Sukses</p>
-                <p class="text-xs text-gray-600 mt-0.5" x-text="toast.message"></p>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-slate-900">Notifikasi Sistem</p>
+                <p class="text-slate-600 mt-0.5 truncate" x-text="toast.message"></p>
             </div>
-            <button @click="toast.show = false" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button @click="toast.show = false" class="text-slate-400 hover:text-slate-600 p-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
         <!-- Top Header & Action Buttons -->
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
+        <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-200 print:hidden">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Data Rekam Medis</h2>
+                    <h2 class="text-lg font-bold text-slate-900 tracking-tight">
+                        @if($isStaff)
+                            Rekam Medis Elektronik (RME)
+                        @else
+                            Riwayat Rekam Medis Pasien
+                        @endif
+                    </h2>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-teal-50 text-teal-800 border border-teal-200">
+                        Klinik Pratama LPSK
+                    </span>
                 </div>
-                <p class="text-gray-500 text-sm mt-1">Kelola riwayat kesehatan pasien, anamnesa, diagnosa ICD-10, dan resep obat klinik.</p>
+                <p class="text-slate-500 text-xs mt-0.5">
+                    @if($isStaff)
+                        Kelola riwayat kesehatan pasien, anamnesa, pemeriksaan fisik, diagnosa ICD-10, dan terapi resep klinik.
+                    @else
+                        Pantau riwayat kunjungan, hasil pemeriksaan fisik, diagnosa dokter, dan terapi obat Anda secara transparan.
+                    @endif
+                </p>
             </div>
-            <div class="flex items-center gap-3">
-                <button @click="openCetak('all', null)" class="btn-secondary py-2.5 px-4 text-sm font-semibold flex items-center gap-2 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Cetak Riwayat
+            <div class="flex items-center gap-2">
+                <button @click="openCetak('all', null)" class="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span>Cetak Resume</span>
                 </button>
-                <button @click="openTambahModal()" class="btn-primary py-2.5 px-5 text-sm font-semibold shadow-md shadow-emerald-600/20 hover:shadow-lg transition-all">
-                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Tambah Rekam Medis
+                @if($isStaff)
+                <button @click="openTambahModal()" class="px-3.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    <span>Tambah Rekam Medis</span>
                 </button>
+                @endif
             </div>
         </div>
 
         <!-- Main Layout Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 print:hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-5 print:hidden">
             
             <!-- Sidebar Filter / Patient List -->
-            <div class="lg:col-span-1 space-y-4">
-                <!-- Search Box -->
-                <div class="relative w-full">
-                    <input type="text" 
-                           x-model="searchQuery" 
-                           placeholder="Cari ID Pasien, NIK, atau Nama..." 
-                           class="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-sm shadow-sm transition-all bg-white">
-                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </div>
-
-                <!-- Patient Card List -->
-                <div class="card p-0 overflow-hidden bg-white shadow-sm border border-gray-150 rounded-2xl">
-                    <div class="p-3.5 border-b border-gray-100 bg-gray-50/70 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-900 text-xs uppercase tracking-wider">Daftar Pasien (<span x-text="filteredPatients.length"></span>)</h3>
-                        <span class="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">Klinik LPSK</span>
+            <div class="lg:col-span-1 space-y-3">
+                @if($isStaff)
+                    <!-- Search Box -->
+                    <div class="relative w-full">
+                        <input type="text" 
+                               x-model="searchQuery" 
+                               placeholder="Cari No. RM, NIK, atau Nama..." 
+                               class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white placeholder-slate-400">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <div class="divide-y divide-gray-100 max-h-[580px] overflow-y-auto">
-                        <template x-for="p in filteredPatients" :key="p.id">
-                            <div @click="activePatientId = p.id" 
-                                 class="p-4 cursor-pointer transition-all flex items-start gap-3 select-none"
-                                 :class="activePatientId === p.id ? 'bg-emerald-50/60 border-l-4 border-emerald-600 shadow-inner' : 'hover:bg-gray-50 border-l-4 border-transparent'">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0"
-                                     :class="p.avatar_color">
-                                    <span x-text="p.initials"></span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between">
-                                        <div class="font-bold text-sm text-gray-900 truncate" x-text="p.name"></div>
-                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600" x-text="p.blood ? 'Gol. ' + p.blood : ''"></span>
+
+                    <!-- Patient Card List -->
+                    <div class="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+                        <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <span class="font-bold text-slate-700 text-xs uppercase tracking-wider">Daftar Pasien (<span x-text="filteredPatients.length"></span>)</span>
+                            <span class="text-[10px] font-mono text-slate-500">RME LPSK</span>
+                        </div>
+                        <div class="divide-y divide-slate-100 max-h-[560px] overflow-y-auto">
+                            <template x-for="p in filteredPatients" :key="p.id">
+                                <div @click="activePatientId = p.id" 
+                                     class="p-3 cursor-pointer transition-colors flex items-start gap-2.5 select-none"
+                                     :class="activePatientId === p.id ? 'bg-teal-50/70 border-l-4 border-teal-700' : 'hover:bg-slate-50 border-l-4 border-transparent'">
+                                    <div class="w-8 h-8 rounded bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0"
+                                         :class="activePatientId === p.id ? 'bg-teal-700 text-white border-teal-700' : ''">
+                                        <span x-text="p.initials"></span>
                                     </div>
-                                    <div class="text-xs font-mono text-emerald-700 font-medium mt-0.5" x-text="p.id"></div>
-                                    <div class="text-[11px] text-gray-400 mt-1.5 flex items-center">
-                                        <svg class="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        <span x-text="p.last_visit"></span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <div class="font-semibold text-xs text-slate-900 truncate" x-text="p.name"></div>
+                                            <span class="text-[10px] font-mono text-slate-500 shrink-0" x-text="p.blood ? 'Gol ' + p.blood : ''"></span>
+                                        </div>
+                                        <div class="text-[11px] font-mono text-teal-800 font-medium" x-text="p.id"></div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5 truncate flex items-center gap-1">
+                                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span x-text="p.last_visit"></span>
+                                        </div>
                                     </div>
                                 </div>
+                            </template>
+                            <div x-show="filteredPatients.length === 0" class="p-6 text-center text-slate-400 text-xs">
+                                Tidak ada data pasien yang cocok.
                             </div>
-                        </template>
-                        <div x-show="filteredPatients.length === 0" class="p-8 text-center text-gray-400 text-xs">
-                            Tidak ada data pasien yang sesuai pencarian.
                         </div>
                     </div>
-                </div>
+                @else
+                    <!-- Patient Profile Overview Card -->
+                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-lg bg-teal-700 text-white flex items-center justify-center font-bold text-xs shrink-0" x-text="activePatient.initials"></div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-bold text-xs text-slate-900 truncate" x-text="activePatient.name"></h3>
+                                <p class="text-[11px] font-mono text-teal-800 font-semibold" x-text="activePatient.id"></p>
+                            </div>
+                        </div>
+
+                        <div class="pt-2.5 border-t border-slate-100 space-y-1.5 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Penjamin:</span>
+                                <span class="font-semibold text-slate-800" x-text="activePatient.insurance"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Gol. Darah:</span>
+                                <span class="font-semibold text-slate-800" x-text="activePatient.blood || '-'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Riwayat Alergi:</span>
+                                <span class="font-semibold text-rose-700 truncate max-w-[130px]" x-text="activePatient.allergies"></span>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <a href="{{ route('antrian.index', ['modal' => 'daftar']) }}" class="w-full py-2 px-3 bg-teal-700 hover:bg-teal-800 text-white font-medium text-xs rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-2xs">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>Daftar Kunjungan Baru</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Main Detail Area -->
             <div class="lg:col-span-3">
-                <div class="card p-0 overflow-hidden mb-6 bg-white shadow-sm border border-gray-150 rounded-3xl">
+                <div class="bg-white border border-slate-200 rounded-lg shadow-2xs mb-5 overflow-hidden">
                     <!-- Header Card Detail (Active Patient Profile) -->
-                    <div class="p-6 sm:p-8 border-b border-gray-100 flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-md relative overflow-hidden">
-                        <!-- Background Pattern Deco -->
-                        <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-                        <div class="absolute left-1/2 -top-12 w-32 h-32 bg-emerald-400/20 rounded-full blur-xl pointer-events-none"></div>
-
-                        <div class="flex items-center gap-4 relative z-10">
-                            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-2xl font-black backdrop-blur-md border border-white/30 shadow-inner">
+                    <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-slate-900 text-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-lg bg-teal-800 border border-teal-700 text-white flex items-center justify-center text-lg font-bold shrink-0">
                                 <span x-text="activePatient.initials"></span>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h2 class="text-2xl font-bold tracking-tight" x-text="activePatient.name"></h2>
-                                    <span class="bg-white/20 text-white text-[11px] font-bold px-2 py-0.5 rounded-full border border-white/30" x-text="activePatient.insurance"></span>
+                                    <h2 class="text-base font-bold tracking-tight text-white" x-text="activePatient.name"></h2>
+                                    <span class="bg-slate-800 text-teal-300 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-700" x-text="activePatient.insurance"></span>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-3 text-xs text-emerald-100 mt-1.5">
-                                    <span class="font-mono bg-black/25 px-2 py-0.5 rounded font-semibold tracking-wide text-white" x-text="activePatient.id"></span>
-                                    <span x-text="activePatient.gender + ', ' + activePatient.age + ' Tahun'"></span>
-                                    <span class="bg-white/15 px-2 py-0.5 rounded" x-text="'Gol. Darah: ' + activePatient.blood"></span>
-                                    <span x-show="activePatient.allergies && activePatient.allergies !== 'Tidak ada'" class="bg-red-500/80 text-white px-2 py-0.5 rounded font-medium text-[11px]" x-text="'Alergi: ' + activePatient.allergies"></span>
+                                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-1">
+                                    <span class="font-mono bg-slate-800 px-1.5 py-0.5 rounded text-[11px] text-teal-300 border border-slate-700" x-text="activePatient.id"></span>
+                                    <span class="text-slate-400">&bull;</span>
+                                    <span x-text="activePatient.gender + ', ' + activePatient.age + ' Thn'"></span>
+                                    <span class="text-slate-400">&bull;</span>
+                                    <span x-text="'Gol: ' + activePatient.blood"></span>
+                                    <span x-show="activePatient.allergies && activePatient.allergies !== 'Tidak ada'" class="bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded text-[10px] font-medium" x-text="'Alergi: ' + activePatient.allergies"></span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto justify-end">
-                            <button @click="openTambahModal(activePatient.id)" class="bg-white text-emerald-700 hover:bg-emerald-50 transition-all px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                                Rekam Medis Baru
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+                            @if($isStaff)
+                            <button @click="openTambahModal(activePatient.id)" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                <span>Rekam Baru</span>
                             </button>
-                            <button @click="openCetak('all', null)" class="bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-white/30 text-white">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                Cetak Resume
+                            @endif
+                            <button @click="openCetak('all', null)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                <span>Cetak Riwayat</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Tabs -->
-                    <div class="border-b border-gray-100 px-6 sm:px-8 bg-white">
-                        <nav class="-mb-px flex space-x-6 overflow-x-auto text-sm">
+                    <!-- Clean Enterprise Tabs -->
+                    <div class="border-b border-slate-200 px-4 sm:px-6 bg-slate-50">
+                        <nav class="-mb-px flex space-x-6 overflow-x-auto text-xs">
                             <button @click="activeTab = 'kunjungan'" 
-                                    :class="activeTab === 'kunjungan' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium'"
-                                    class="whitespace-nowrap py-3.5 px-1 border-b-2 transition-all flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    :class="activeTab === 'kunjungan' ? 'border-teal-700 text-teal-800 font-bold bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                    class="whitespace-nowrap py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                 Riwayat Kunjungan (<span x-text="activePatient.visits.length"></span>)
                             </button>
+                            <button @click="activeTab = 'resep'" 
+                                    :class="activeTab === 'resep' ? 'border-teal-700 text-teal-800 font-bold bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                    class="whitespace-nowrap py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                Resep Obat
+                            </button>
                             <button @click="activeTab = 'demografi'" 
-                                    :class="activeTab === 'demografi' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium'"
-                                    class="whitespace-nowrap py-3.5 px-1 border-b-2 transition-all flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    :class="activeTab === 'demografi' ? 'border-teal-700 text-teal-800 font-bold bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                    class="whitespace-nowrap py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 Data Demografi
                             </button>
                             <button @click="activeTab = 'lab'" 
-                                    :class="activeTab === 'lab' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium'"
-                                    class="whitespace-nowrap py-3.5 px-1 border-b-2 transition-all flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                    :class="activeTab === 'lab' ? 'border-teal-700 text-teal-800 font-bold bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                    class="whitespace-nowrap py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
                                 Hasil Lab (<span x-text="activePatient.lab_results ? activePatient.lab_results.length : 0"></span>)
                             </button>
                             <button @click="activeTab = 'tindakan'" 
-                                    :class="activeTab === 'tindakan' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium'"
-                                    class="whitespace-nowrap py-3.5 px-1 border-b-2 transition-all flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                Tindakan Khusus (<span x-text="activePatient.procedures ? activePatient.procedures.length : 0"></span>)
+                                    :class="activeTab === 'tindakan' ? 'border-teal-700 text-teal-800 font-bold bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                    class="whitespace-nowrap py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                Tindakan Medis (<span x-text="activePatient.procedures ? activePatient.procedures.length : 0"></span>)
                             </button>
                         </nav>
                     </div>
 
                     <!-- Content Area -->
-                    <div class="p-6 sm:p-8 bg-gray-50/40">
+                    <div class="p-4 sm:p-5 bg-slate-50/60">
                         
                         <!-- TAB 1: RIWAYAT KUNJUNGAN -->
-                        <div x-show="activeTab === 'kunjungan'" class="space-y-6">
+                        <div x-show="activeTab === 'kunjungan'" class="space-y-4">
                             <template x-for="(visit, idx) in activePatient.visits" :key="visit.id || idx">
-                                <div class="relative pl-8 sm:pl-32 py-4 group">
+                                <div class="relative pl-6 sm:pl-28 py-2 group">
                                     <!-- Date Badge Left Column -->
-                                    <div class="hidden sm:block absolute left-0 top-4 text-sm font-bold text-gray-900 w-24 text-right">
+                                    <div class="hidden sm:block absolute left-0 top-3 text-xs font-bold text-slate-800 w-24 text-right">
                                         <span x-text="visit.date_display"></span>
                                         <br>
-                                        <span class="text-xs font-normal text-gray-500" x-text="visit.date_sub || visit.date"></span>
+                                        <span class="text-[10px] font-mono font-normal text-slate-400" x-text="visit.date_sub || visit.date"></span>
                                     </div>
                                     
                                     <!-- Timeline Dot and Line -->
-                                    <div class="absolute left-0 sm:left-28 top-6 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10"
-                                         :class="idx === 0 ? 'bg-emerald-600 ring-4 ring-emerald-100' : 'bg-gray-400'"></div>
-                                    <div class="absolute left-2 sm:left-[119px] top-10 bottom-[-1.5rem] w-0.5 bg-gray-200 group-last:hidden"></div>
+                                    <div class="absolute left-0 sm:left-24 top-4.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-xs z-10"
+                                         :class="idx === 0 ? 'bg-teal-700 ring-2 ring-teal-200' : 'bg-slate-400'"></div>
+                                    <div class="absolute left-1.5 sm:left-[103px] top-8 bottom-[-1rem] w-px bg-slate-200 group-last:hidden"></div>
                                     
                                     <!-- Card Content -->
-                                    <div class="card p-5 sm:p-6 bg-white border border-gray-150 shadow-sm rounded-2xl ml-0 sm:ml-4 hover:shadow-md transition-all">
-                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4 pb-3 border-b border-gray-100">
+                                    <div class="bg-white border border-slate-200 shadow-2xs rounded-lg p-4 ml-0 sm:ml-2 hover:border-slate-300 transition-colors">
+                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3 pb-2.5 border-b border-slate-100">
                                             <div>
                                                 <div class="flex items-center gap-2">
-                                                    <h4 class="font-bold text-lg text-gray-900" x-text="visit.poli"></h4>
-                                                    <span class="text-xs font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-600" x-text="visit.id"></span>
+                                                    <h4 class="font-bold text-sm text-slate-900" x-text="visit.poli"></h4>
+                                                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="visit.id"></span>
                                                 </div>
-                                                <p class="text-xs text-gray-500 mt-0.5">
-                                                    Ditangani oleh <span class="font-semibold text-gray-800" x-text="visit.doctor"></span> &bull; <span class="text-gray-400" x-text="visit.time"></span>
+                                                <p class="text-xs text-slate-500 mt-0.5">
+                                                    Ditangani oleh <span class="font-semibold text-slate-800" x-text="visit.doctor"></span> &bull; <span class="text-slate-400 font-mono" x-text="visit.time"></span>
                                                 </p>
                                             </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="badge badge-green" x-text="visit.status"></span>
-                                                <button @click="openCetak('single', visit)" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors title='Cetak Lembar Kunjungan'">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-teal-50 text-teal-800 border border-teal-200" x-text="visit.status"></span>
+                                                <button @click="openCetak('single', visit)" class="p-1 text-slate-400 hover:text-teal-700 hover:bg-slate-50 rounded transition-colors" title="Cetak Lembar Kunjungan">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                                 </button>
                                             </div>
                                         </div>
                                         
-                                        <div class="space-y-4 text-sm">
+                                        <div class="space-y-3 text-xs">
                                             <!-- Anamnesa & Vitals Grid -->
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div class="bg-gray-50/80 rounded-xl p-3.5 border border-gray-100">
-                                                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                                                         Anamnesa & Keluhan Utama
                                                     </div>
-                                                    <p class="text-gray-800 leading-relaxed text-xs sm:text-sm" x-text="visit.anamnesa"></p>
+                                                    <p class="text-slate-800 leading-relaxed text-xs" x-text="visit.anamnesa"></p>
                                                 </div>
 
-                                                <div class="bg-gray-50/80 rounded-xl p-3.5 border border-gray-100">
-                                                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                                                         Tanda-tanda Vital (TTV)
                                                     </div>
-                                                    <div class="grid grid-cols-3 gap-2 text-xs">
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Tekanan Darah</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.bp"></span>
+                                                    <div class="grid grid-cols-3 gap-1.5 text-xs">
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">TD</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.bp"></span>
                                                         </div>
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Suhu Tubuh</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.temp"></span>
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">Suhu</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.temp"></span>
                                                         </div>
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Denyut Nadi</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.hr"></span>
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">Nadi</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.hr"></span>
                                                         </div>
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Respirasi</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.rr"></span>
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">Resp</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.rr"></span>
                                                         </div>
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Berat Badan</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.weight || '-'"></span>
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">BB</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.weight || '-'"></span>
                                                         </div>
-                                                        <div class="bg-white p-2 rounded-lg border border-gray-100">
-                                                            <span class="text-gray-400 block text-[10px]">Tinggi Badan</span>
-                                                            <span class="font-bold text-gray-800" x-text="visit.vitals.height || '-'"></span>
+                                                        <div class="bg-white p-1.5 rounded border border-slate-200 text-center">
+                                                            <span class="text-slate-400 block text-[9px]">TB</span>
+                                                            <span class="font-bold text-slate-800 font-mono text-xs" x-text="visit.vitals.height || '-'"></span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             <!-- Diagnosis Box -->
-                                            <div class="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/70">
-                                                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <div class="bg-amber-50/60 rounded-lg p-2.5 border border-amber-200">
+                                                <div class="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                                                    <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                                     Diagnosa ICD-10
                                                 </div>
-                                                <p class="text-sm font-semibold text-gray-900">
-                                                    <span class="font-mono bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded mr-1.5 text-xs" x-text="visit.diagnosis_code"></span>
-                                                    <span x-text="visit.diagnosis_name"></span>
+                                                <p class="text-xs font-semibold text-slate-900">
+                                                    <span class="font-mono bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded text-[11px] border border-amber-300" x-text="visit.diagnosis_code"></span>
+                                                    <span class="ml-1" x-text="visit.diagnosis_name"></span>
                                                 </p>
                                             </div>
                                             
                                             <!-- Prescription & Medication Box -->
-                                            <div class="bg-emerald-50/50 rounded-xl p-3.5 border border-emerald-200/70">
-                                                <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                            <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+                                                <div class="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
                                                     <span class="flex items-center gap-1.5">
-                                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                                        <svg class="w-3 h-3 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
                                                         Resep Obat & Terapi
                                                     </span>
-                                                    <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded">R/ Farmasi</span>
+                                                    <span class="text-[10px] text-teal-800 font-mono font-medium bg-teal-50 border border-teal-200 px-2 py-0.5 rounded">R/ Farmasi</span>
                                                 </div>
                                                 <div class="space-y-1.5">
                                                     <template x-for="(rx, rIdx) in visit.prescriptions" :key="rIdx">
-                                                        <div class="flex items-start justify-between bg-white p-2.5 rounded-lg border border-emerald-100 text-xs">
+                                                        <div class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 text-xs">
                                                             <div class="flex items-center gap-2">
-                                                                <span class="w-5 h-5 rounded bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-[10px]" x-text="rIdx + 1"></span>
+                                                                <span class="w-4 h-4 rounded bg-slate-100 text-slate-600 font-mono font-bold flex items-center justify-center text-[10px]" x-text="rIdx + 1"></span>
                                                                 <div>
-                                                                    <div class="font-bold text-gray-900" x-text="rx.name"></div>
-                                                                    <div class="text-gray-500 text-[11px]" x-text="rx.dosage"></div>
+                                                                    <span class="font-semibold text-slate-900" x-text="rx.name"></span>
+                                                                    <span class="text-slate-500 text-[11px] ml-1.5" x-text="'(' + rx.dosage + ')'"></span>
                                                                 </div>
                                                             </div>
-                                                            <span class="font-mono text-emerald-800 bg-emerald-50 px-2 py-1 rounded font-semibold text-[11px]" x-text="rx.qty"></span>
+                                                            <span class="font-mono text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded font-medium text-[11px]" x-text="rx.qty"></span>
                                                         </div>
                                                     </template>
                                                 </div>
                                             </div>
 
                                             <!-- Notes & Actions -->
-                                            <div x-show="visit.notes || visit.actions" class="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                                <div x-show="visit.actions" class="mb-1">
-                                                    <span class="font-bold text-gray-700">Tindakan Medis: </span>
+                                            <div x-show="visit.notes || visit.actions" class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                                <div x-show="visit.actions" class="mb-0.5">
+                                                    <span class="font-bold text-slate-700">Tindakan: </span>
                                                     <span x-text="visit.actions"></span>
                                                 </div>
                                                 <div x-show="visit.notes">
-                                                    <span class="font-bold text-gray-700">Instruksi & Catatan Dokter: </span>
+                                                    <span class="font-bold text-slate-700">Catatan Dokter: </span>
                                                     <span x-text="visit.notes"></span>
                                                 </div>
                                             </div>
@@ -854,129 +918,164 @@
                                 </div>
                             </template>
 
-                            <div x-show="activePatient.visits.length === 0" class="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-                                <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <p class="text-sm font-semibold text-gray-700">Belum ada riwayat kunjungan.</p>
-                                <p class="text-xs text-gray-400 mt-1">Klik tombol di bawah untuk menambahkan rekam medis pertama pasien ini.</p>
-                                <button @click="openTambahModal(activePatient.id)" class="btn-primary mt-4 py-2 px-4 text-xs">
+                            <div x-show="activePatient.visits.length === 0" class="text-center py-10 bg-white rounded-lg border border-dashed border-slate-300">
+                                <svg class="w-8 h-8 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <p class="text-xs font-semibold text-slate-700">Belum ada riwayat kunjungan.</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Silakan buat lembar rekam medis pertama untuk pasien ini.</p>
+                                @if($isStaff)
+                                <button @click="openTambahModal(activePatient.id)" class="mt-3 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors">
                                     Tambah Rekam Medis
                                 </button>
+                                @endif
                             </div>
                         </div>
 
                         <!-- TAB 2: DATA DEMOGRAFI -->
-                        <div x-show="activeTab === 'demografi'" class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm space-y-6">
-                            <h3 class="font-bold text-gray-900 text-base border-b border-gray-100 pb-3">Informasi Demografi & Rekam Pasien</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                                <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Nomor Rekam Medis (No. RM)</span>
-                                    <span class="font-bold font-mono text-emerald-700 text-base" x-text="activePatient.id"></span>
+                        <div x-show="activeTab === 'demografi'" class="bg-white rounded-lg p-5 border border-slate-200 space-y-4">
+                            <h3 class="font-bold text-slate-900 text-sm border-b border-slate-200 pb-2.5">Informasi Demografi & Rekam Pasien</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">
+                                    <span class="text-[10px] text-slate-500 font-medium block">Nomor Rekam Medis (No. RM)</span>
+                                    <span class="font-bold font-mono text-teal-800 text-sm" x-text="activePatient.id"></span>
+                                </div>
+                                <div class="p-2.5 bg-slate-50 rounded border border-slate-200">
+                                    <span class="text-[10px] text-slate-500 font-medium block">Nomor Induk Kependudukan (NIK)</span>
+                                    <span class="font-bold text-slate-800 font-mono text-sm" x-text="activePatient.nik"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Nomor Induk Kependudukan (NIK)</span>
-                                    <span class="font-bold text-gray-800 font-mono" x-text="activePatient.nik"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Nama Lengkap</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.name"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Nama Lengkap</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.name"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Jenis Kelamin & Usia</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.gender + ', ' + activePatient.age + ' Tahun'"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Jenis Kelamin & Usia</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.gender + ', ' + activePatient.age + ' Tahun'"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Tanggal Lahir</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.dob"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Tanggal Lahir</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.dob"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Golongan Darah</span>
+                                    <span class="font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded text-[11px]" x-text="activePatient.blood"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Golongan Darah</span>
-                                    <span class="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded" x-text="activePatient.blood"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Nomor Telepon / WhatsApp</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.phone"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Nomor Telepon / WhatsApp</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.phone"></span>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Pekerjaan</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.demographics ? activePatient.demographics.occupation : '-'"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Pekerjaan</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.demographics ? activePatient.demographics.occupation : '-'"></span>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <span class="text-xs text-gray-400 font-medium block">Alamat Domisili</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.address"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Alamat Domisili</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.address"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Kontak Darurat</span>
-                                    <span class="font-semibold text-gray-800" x-text="activePatient.demographics ? activePatient.demographics.emergency_contact : '-'"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Kontak Darurat</span>
+                                    <span class="font-semibold text-slate-900" x-text="activePatient.demographics ? activePatient.demographics.emergency_contact : '-'"></span>
                                 </div>
                                 <div>
-                                    <span class="text-xs text-gray-400 font-medium block">Status Jaminan / Asuransi</span>
-                                    <span class="font-semibold text-emerald-700" x-text="activePatient.insurance"></span>
+                                    <span class="text-[10px] text-slate-500 font-medium block">Status Jaminan / Asuransi</span>
+                                    <span class="font-semibold text-teal-800" x-text="activePatient.insurance"></span>
                                 </div>
-                                <div class="md:col-span-2 bg-red-50 p-4 rounded-xl border border-red-100">
-                                    <span class="text-xs text-red-700 font-bold uppercase tracking-wider block mb-1">Riwayat Alergi Obat / Makanan</span>
-                                    <span class="font-semibold text-red-900" x-text="activePatient.allergies || 'Tidak ada riwayat alergi yang dilaporkan.'"></span>
+                                <div class="md:col-span-2 bg-rose-50 p-3 rounded-lg border border-rose-200">
+                                    <span class="text-[10px] text-rose-800 font-bold uppercase tracking-wider block mb-0.5">Riwayat Alergi Obat / Makanan</span>
+                                    <span class="font-semibold text-rose-900 text-xs" x-text="activePatient.allergies || 'Tidak ada riwayat alergi yang dilaporkan.'"></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- TAB 3: HASIL LAB -->
-                        <div x-show="activeTab === 'lab'" class="space-y-4">
-                            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
-                                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                                    <h3 class="font-bold text-gray-900 text-base">Riwayat Pemeriksaan Laboratorium</h3>
-                                    <span class="text-xs text-gray-500">Laboratorium Klinik Pratama Satu Sehat LPSK</span>
-                                </div>
-                                <div class="space-y-3">
-                                    <template x-for="(lab, lIdx) in activePatient.lab_results" :key="lIdx">
-                                        <div class="p-4 rounded-xl border border-gray-150 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold text-gray-900 text-sm" x-text="lab.test_name"></span>
-                                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                          :class="lab.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'"
-                                                          x-text="lab.status"></span>
-                                                </div>
-                                                <p class="text-xs font-mono text-gray-700 mt-1" x-text="lab.result"></p>
-                                                <p class="text-[11px] text-gray-400 mt-1">Dokter Perujuk: <span x-text="lab.doctor"></span> &bull; Tanggal: <span x-text="lab.date"></span></p>
-                                            </div>
+                        <div x-show="activeTab === 'lab'" class="bg-white rounded-lg p-5 border border-slate-200 space-y-4">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2.5">
+                                <h3 class="font-bold text-slate-900 text-sm">Riwayat Pemeriksaan Laboratorium</h3>
+                                <span class="text-[11px] text-slate-500 font-mono">Laboratorium Klinik LPSK</span>
+                            </div>
+                            <div class="space-y-2.5">
+                                <template x-for="(lab, lIdx) in activePatient.lab_results" :key="lIdx">
+                                    <div class="p-3 rounded-lg border border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
                                             <div class="flex items-center gap-2">
-                                                <button @click="alert('Hasil Lab Lengkap: ' + lab.test_name + '\n' + lab.result)" class="btn-secondary py-1.5 px-3 text-xs">
-                                                    Lihat Hasil
-                                                </button>
+                                                <span class="font-bold text-slate-900 text-xs" x-text="lab.test_name"></span>
+                                                <span class="text-[10px] font-medium px-2 py-0.5 rounded border"
+                                                      :class="lab.status === 'Normal' ? 'bg-teal-50 text-teal-800 border-teal-200' : 'bg-amber-50 text-amber-800 border-amber-200'"
+                                                      x-text="lab.status"></span>
                                             </div>
+                                            <p class="text-xs font-mono text-slate-700 mt-1" x-text="lab.result"></p>
+                                            <p class="text-[10px] text-slate-400 mt-0.5">Dokter Perujuk: <span x-text="lab.doctor"></span> &bull; Tgl: <span x-text="lab.date"></span></p>
                                         </div>
-                                    </template>
-                                    <div x-show="!activePatient.lab_results || activePatient.lab_results.length === 0" class="text-center py-8 text-gray-400 text-xs">
-                                        Belum ada data pemeriksaan lab untuk pasien ini.
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <button @click="alert('Hasil Lab Lengkap: ' + lab.test_name + '\n' + lab.result)" class="px-2.5 py-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium rounded shadow-2xs">
+                                                Lihat Hasil
+                                            </button>
+                                        </div>
                                     </div>
+                                </template>
+                                <div x-show="!activePatient.lab_results || activePatient.lab_results.length === 0" class="text-center py-6 text-slate-400 text-xs">
+                                    Belum ada data pemeriksaan lab untuk pasien ini.
                                 </div>
                             </div>
                         </div>
 
                         <!-- TAB 4: TINDAKAN KHUSUS -->
-                        <div x-show="activeTab === 'tindakan'" class="space-y-4">
-                            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
-                                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                                    <h3 class="font-bold text-gray-900 text-base">Riwayat Tindakan & Prosedur Medis</h3>
-                                </div>
-                                <div class="space-y-3">
-                                    <template x-for="(proc, pIdx) in activePatient.procedures" :key="pIdx">
-                                        <div class="p-4 rounded-xl border border-gray-150 bg-gray-50/60 flex items-center justify-between">
-                                            <div>
-                                                <div class="font-bold text-gray-900 text-sm" x-text="proc.title"></div>
-                                                <p class="text-xs text-gray-500 mt-0.5">
-                                                    Poli: <span class="font-semibold text-gray-700" x-text="proc.poli"></span> &bull; 
-                                                    Dokter: <span class="font-semibold text-gray-700" x-text="proc.doctor"></span> &bull; 
-                                                    Tgl: <span x-text="proc.date"></span>
-                                                </p>
-                                            </div>
-                                            <span class="badge badge-green text-xs" x-text="proc.status"></span>
+                        <div x-show="activeTab === 'tindakan'" class="bg-white rounded-lg p-5 border border-slate-200 space-y-4">
+                            <div class="border-b border-slate-200 pb-2.5">
+                                <h3 class="font-bold text-slate-900 text-sm">Riwayat Tindakan & Prosedur Medis</h3>
+                            </div>
+                            <div class="space-y-2">
+                                <template x-for="(proc, pIdx) in activePatient.procedures" :key="pIdx">
+                                    <div class="p-3 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
+                                        <div>
+                                            <div class="font-bold text-slate-900 text-xs" x-text="proc.title"></div>
+                                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                                Poli: <span class="font-semibold text-slate-700" x-text="proc.poli"></span> &bull; 
+                                                Dokter: <span class="font-semibold text-slate-700" x-text="proc.doctor"></span> &bull; 
+                                                Tgl: <span x-text="proc.date"></span>
+                                            </p>
                                         </div>
-                                    </template>
-                                    <div x-show="!activePatient.procedures || activePatient.procedures.length === 0" class="text-center py-8 text-gray-400 text-xs">
-                                        Belum ada riwayat tindakan khusus untuk pasien ini.
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-teal-50 text-teal-800 border border-teal-200" x-text="proc.status"></span>
                                     </div>
+                                </template>
+                                <div x-show="!activePatient.procedures || activePatient.procedures.length === 0" class="text-center py-6 text-slate-400 text-xs">
+                                    Belum ada riwayat tindakan khusus untuk pasien ini.
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 5: RESEP / OBAT -->
+                        <div x-show="activeTab === 'resep'" class="bg-white rounded-lg p-5 border border-slate-200 space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-2.5 gap-2">
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-sm">Riwayat Resep & Terapi Obat Pasien</h3>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Daftar terapi obat yang diresepkan dokter dan petunjuk pemakaian farmasi.</p>
+                                </div>
+                                <span class="text-[10px] font-mono font-medium text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded self-start sm:self-auto">
+                                    Unit Farmasi LPSK
+                                </span>
+                            </div>
+                            <div class="space-y-3">
+                                <template x-for="(v, vIdx) in activePatient.visits" :key="'rx-' + vIdx">
+                                    <div x-show="v.prescriptions && v.prescriptions.length > 0" class="p-3.5 rounded-lg border border-slate-200 bg-slate-50 space-y-2.5">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200 gap-1">
+                                            <div>
+                                                <span class="font-bold text-xs text-slate-900" x-text="v.poli"></span>
+                                                <span class="text-[11px] text-slate-500" x-text="' &bull; Tanggal: ' + v.date + ' (' + v.time + ')'"></span>
+                                            </div>
+                                            <span class="text-[11px] text-slate-700 font-medium" x-text="'Dokter: ' + v.doctor"></span>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                            <template x-for="(rx, rIdx) in v.prescriptions" :key="rIdx">
+                                                <div class="p-2.5 bg-white rounded border border-slate-200 space-y-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="font-semibold text-xs text-slate-900 truncate" x-text="rx.name"></span>
+                                                        <span class="text-[10px] font-mono font-medium px-1.5 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded" x-text="rx.qty"></span>
+                                                    </div>
+                                                    <p class="text-[11px] text-teal-800 font-medium" x-text="rx.dosage"></p>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
 
@@ -985,60 +1084,56 @@
             </div>
         </div>
 
+        @if($isStaff)
         <!-- ========================================================================= -->
-        <!-- MODAL: TAMBAH REKAM MEDIS BARU -->
+        <!-- MODAL: TAMBAH REKAM MEDIS BARU (Khusus Tenaga Medis / Admin) -->
         <!-- ========================================================================= -->
         <div x-show="showTambahModal" 
-             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter="transition ease-out duration-150"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave="transition ease-in duration-100"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 print:hidden"
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 flex items-center justify-center p-3 sm:p-4 print:hidden"
              style="display: none;">
             
             <div @click.away="showTambahModal = false"
-                 class="relative bg-white rounded-3xl shadow-2xl border border-gray-150 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                 class="relative bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 
                 <!-- Modal Header -->
-                <div class="sticky top-0 z-20 bg-white/95 backdrop-blur px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900">Tambah Rekam Medis Pasien</h3>
-                            <p class="text-xs text-gray-500">Isi formulir anamnesa, pemeriksaan fisik, diagnosa, dan resep obat.</p>
-                        </div>
+                <div class="sticky top-0 z-20 bg-white px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Tambah Lembar Rekam Medis Pasien</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Isi formulir anamnesa, pemeriksaan fisik, diagnosa ICD-10, dan resep obat.</p>
                     </div>
-                    <button @click="showTambahModal = false" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button @click="showTambahModal = false" class="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
                 <!-- Modal Body Form -->
-                <form @submit.prevent="saveRekamMedis" class="p-6 space-y-6">
+                <form @submit.prevent="saveRekamMedis" class="p-5 space-y-4">
                     
                     <!-- Section 1: Pemilihan Pasien -->
-                    <div class="bg-gray-50/70 p-4 rounded-2xl border border-gray-200">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="text-xs font-bold text-gray-700 uppercase tracking-wider">Target Pasien</label>
-                            <div class="flex items-center gap-4 text-xs font-semibold">
+                    <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <label class="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Target Pasien</label>
+                            <div class="flex items-center gap-4 text-xs">
                                 <label class="inline-flex items-center cursor-pointer">
-                                    <input type="radio" value="existing" x-model="newRecord.mode" class="text-emerald-600 focus:ring-emerald-500">
-                                    <span class="ml-1.5 text-gray-700">Pasien Terdaftar</span>
+                                    <input type="radio" value="existing" x-model="newRecord.mode" class="text-teal-700 focus:ring-teal-700">
+                                    <span class="ml-1.5 text-slate-700 font-medium">Pasien Terdaftar</span>
                                 </label>
                                 <label class="inline-flex items-center cursor-pointer">
-                                    <input type="radio" value="new" x-model="newRecord.mode" class="text-emerald-600 focus:ring-emerald-500">
-                                    <span class="ml-1.5 text-gray-700">Pasien Baru</span>
+                                    <input type="radio" value="new" x-model="newRecord.mode" class="text-teal-700 focus:ring-teal-700">
+                                    <span class="ml-1.5 text-slate-700 font-medium">Pasien Baru</span>
                                 </label>
                             </div>
                         </div>
 
                         <!-- If Existing Patient -->
                         <div x-show="newRecord.mode === 'existing'">
-                            <select x-model="newRecord.patient_id" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white">
+                            <select x-model="newRecord.patient_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white">
                                 <template x-for="p in patients" :key="p.id">
                                     <option :value="p.id" x-text="p.name + ' (' + p.id + ') - Gol. ' + p.blood + ' - ' + p.gender + ' (' + p.age + ' thn)'"></option>
                                 </template>
@@ -1046,29 +1141,29 @@
                         </div>
 
                         <!-- If New Patient Form -->
-                        <div x-show="newRecord.mode === 'new'" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <div x-show="newRecord.mode === 'new'" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200 mt-2">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Nama Lengkap Pasien *</label>
-                                <input type="text" x-model="newRecord.new_name" placeholder="Contoh: Hendra Gunawan" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                                <label class="block text-[11px] font-medium text-slate-700 mb-1">Nama Lengkap Pasien *</label>
+                                <input type="text" x-model="newRecord.new_name" placeholder="Contoh: Hendra Gunawan" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">NIK (KTP)</label>
-                                <input type="text" x-model="newRecord.new_nik" placeholder="16 digit NIK" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                                <label class="block text-[11px] font-medium text-slate-700 mb-1">NIK (KTP)</label>
+                                <input type="text" x-model="newRecord.new_nik" placeholder="16 digit NIK" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Jenis Kelamin</label>
-                                <select x-model="newRecord.new_gender" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                                <label class="block text-[11px] font-medium text-slate-700 mb-1">Jenis Kelamin</label>
+                                <select x-model="newRecord.new_gender" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white">
                                     <option value="Laki-laki">Laki-laki</option>
                                     <option value="Perempuan">Perempuan</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Usia (Tahun)</label>
-                                <input type="number" x-model="newRecord.new_age" placeholder="Contoh: 30" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                                <label class="block text-[11px] font-medium text-slate-700 mb-1">Usia (Tahun)</label>
+                                <input type="number" x-model="newRecord.new_age" placeholder="Contoh: 30" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Golongan Darah</label>
-                                <select x-model="newRecord.new_blood" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                                <label class="block text-[11px] font-medium text-slate-700 mb-1">Golongan Darah</label>
+                                <select x-model="newRecord.new_blood" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white">
                                     <option value="A">A</option>
                                     <option value="B">B</option>
                                     <option value="AB">AB</option>
@@ -1080,10 +1175,10 @@
                     </div>
 
                     <!-- Section 2: Poli & Dokter Pemeriksa -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Poli / Layanan</label>
-                            <select x-model="newRecord.poli" @change="updateDoctorByPoli()" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Poli / Layanan</label>
+                            <select x-model="newRecord.poli" @change="updateDoctorByPoli()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white">
                                 <option value="Poli Umum">Poli Umum</option>
                                 <option value="Poli Gigi">Poli Gigi</option>
                                 <option value="Poli Anak">Poli Anak</option>
@@ -1091,8 +1186,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Dokter Pemeriksa</label>
-                            <select x-model="newRecord.doctor" @change="updateDoctorSip()" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 bg-white">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Dokter Pemeriksa</label>
+                            <select x-model="newRecord.doctor" @change="updateDoctorSip()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700 bg-white">
                                 <template x-for="doc in doctorsList" :key="doc.name">
                                     <option :value="doc.name" x-text="doc.name + ' (' + doc.poli + ')'"></option>
                                 </template>
@@ -1102,74 +1197,74 @@
 
                     <!-- Section 3: Anamnesa & Keluhan -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Anamnesa & Keluhan Utama Pasien *</label>
-                        <textarea x-model="newRecord.anamnesa" rows="3" required placeholder="Jelaskan keluhan utama pasien, durasi gejala, riwayat penyakit penyerta..." class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"></textarea>
+                        <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Anamnesa & Keluhan Utama Pasien *</label>
+                        <textarea x-model="newRecord.anamnesa" rows="3" required placeholder="Jelaskan keluhan utama pasien, durasi gejala, riwayat penyakit..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700"></textarea>
                     </div>
 
                     <!-- Section 4: Pemeriksaan Fisik & TTV -->
-                    <div class="bg-gray-50/70 p-4 rounded-2xl border border-gray-200">
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Tanda-tanda Vital (TTV)</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                        <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-2">Tanda-tanda Vital (TTV)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Tekanan Darah</label>
-                                <input type="text" x-model="newRecord.bp" placeholder="120/80" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">TD (mmHg)</label>
+                                <input type="text" x-model="newRecord.bp" placeholder="120/80" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Suhu (°C)</label>
-                                <input type="text" x-model="newRecord.temp" placeholder="36.5" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">Suhu (°C)</label>
+                                <input type="text" x-model="newRecord.temp" placeholder="36.5" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Nadi (x/mnt)</label>
-                                <input type="text" x-model="newRecord.hr" placeholder="80" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">Nadi (x/mnt)</label>
+                                <input type="text" x-model="newRecord.hr" placeholder="80" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Resp (x/mnt)</label>
-                                <input type="text" x-model="newRecord.rr" placeholder="20" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">Resp (x/mnt)</label>
+                                <input type="text" x-model="newRecord.rr" placeholder="20" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Berat (kg)</label>
-                                <input type="text" x-model="newRecord.weight" placeholder="65" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">BB (kg)</label>
+                                <input type="text" x-model="newRecord.weight" placeholder="65" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[11px] text-gray-500 mb-1">Tinggi (cm)</label>
-                                <input type="text" x-model="newRecord.height" placeholder="168" class="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-center font-bold">
+                                <label class="block text-[10px] text-slate-500 mb-0.5">TB (cm)</label>
+                                <input type="text" x-model="newRecord.height" placeholder="168" class="w-full rounded border border-slate-300 px-2 py-1 text-xs text-center font-bold">
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 5: Diagnosa ICD-10 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Kode ICD-10</label>
-                            <input type="text" x-model="newRecord.diagnosis_code" placeholder="Contoh: J06.9 / K29.7" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm font-mono uppercase focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Kode ICD-10</label>
+                            <input type="text" x-model="newRecord.diagnosis_code" placeholder="Misal: J06.9" class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-mono uppercase focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Deskripsi Diagnosa Medis *</label>
-                            <input type="text" x-model="newRecord.diagnosis_name" required placeholder="Contoh: Acute upper respiratory infection, unspecified" class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi Diagnosa Medis *</label>
+                            <input type="text" x-model="newRecord.diagnosis_name" required placeholder="Contoh: Acute upper respiratory infection, unspecified" class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                         </div>
                     </div>
 
                     <!-- Section 6: Resep Obat & Terapi Dinamis -->
-                    <div class="bg-emerald-50/40 p-4 rounded-2xl border border-emerald-200">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                    <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <label class="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
                                 Resep Obat & Terapi
                             </label>
-                            <button type="button" @click="addPrescriptionItem()" class="text-xs font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-lg transition-colors flex items-center gap-1 shadow-sm">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <button type="button" @click="addPrescriptionItem()" class="text-xs font-medium text-teal-800 bg-white hover:bg-slate-50 border border-slate-300 px-2.5 py-1 rounded shadow-2xs transition-colors flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                                 Tambah Baris Obat
                             </button>
                         </div>
-                        <div class="space-y-2.5">
+                        <div class="space-y-2">
                             <template x-for="(item, idx) in newRecord.prescriptions" :key="idx">
-                                <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-emerald-100 shadow-sm">
-                                    <span class="w-6 h-6 rounded bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-xs flex-shrink-0" x-text="idx + 1"></span>
-                                    <input type="text" x-model="item.name" placeholder="Nama Obat (mis: Paracetamol 500mg)" class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs">
-                                    <input type="text" x-model="item.dosage" placeholder="Aturan Pakai (mis: 3x1 sesudah makan)" class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs">
-                                    <input type="text" x-model="item.qty" placeholder="Jumlah (10 tab)" class="w-24 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-center">
-                                    <button type="button" @click="removePrescriptionItem(idx)" class="text-gray-400 hover:text-red-600 p-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <div class="flex items-center gap-2 bg-white p-2 rounded border border-slate-200">
+                                    <span class="w-5 h-5 rounded bg-slate-100 text-slate-600 font-mono font-bold flex items-center justify-center text-[10px] shrink-0" x-text="idx + 1"></span>
+                                    <input type="text" x-model="item.name" placeholder="Nama Obat (mis: Paracetamol 500mg)" class="flex-1 rounded border border-slate-300 px-2.5 py-1 text-xs">
+                                    <input type="text" x-model="item.dosage" placeholder="Aturan Pakai (mis: 3x1 sesudah makan)" class="flex-1 rounded border border-slate-300 px-2.5 py-1 text-xs">
+                                    <input type="text" x-model="item.qty" placeholder="Jumlah (10 tab)" class="w-24 rounded border border-slate-300 px-2 py-1 text-xs text-center font-mono">
+                                    <button type="button" @click="removePrescriptionItem(idx)" class="text-slate-400 hover:text-rose-600 p-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </div>
                             </template>
@@ -1177,23 +1272,23 @@
                     </div>
 
                     <!-- Section 7: Tindakan Medis & Catatan Dokter -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Tindakan Medis / Prosedur</label>
-                            <input type="text" x-model="newRecord.actions" placeholder="Misal: Pembersihan Luka, Nebulisasi, Restorasi Gigi" class="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Tindakan Medis / Prosedur</label>
+                            <input type="text" x-model="newRecord.actions" placeholder="Misal: Pembersihan Luka, Nebulisasi, dsb." class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Instruksi & Edukasi Dokter</label>
-                            <input type="text" x-model="newRecord.notes" placeholder="Misal: Istirahat tirah baring 3 hari, kontrol ulang jika demam" class="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                            <label class="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">Instruksi & Edukasi Dokter</label>
+                            <input type="text" x-model="newRecord.notes" placeholder="Misal: Kontrol ulang dalam 3 hari bila demam berlanjut" class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:ring-1 focus:ring-teal-700 focus:border-teal-700">
                         </div>
                     </div>
 
                     <!-- Modal Actions -->
-                    <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
-                        <button type="button" @click="showTambahModal = false" class="px-5 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                        <button type="button" @click="showTambahModal = false" class="px-4 py-2 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                             Batal
                         </button>
-                        <button type="submit" class="btn-primary py-2.5 px-6 text-sm font-bold shadow-md">
+                        <button type="submit" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors">
                             Simpan Rekam Medis
                         </button>
                     </div>
@@ -1201,41 +1296,42 @@
                 </form>
             </div>
         </div>
+        @endif
 
         <!-- ========================================================================= -->
         <!-- MODAL & DEDICATED PRINT VIEW: CETAK RIWAYAT MEDIS -->
         <!-- ========================================================================= -->
         <div x-show="showCetakModal" 
-             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter="transition ease-out duration-150"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave="transition ease-in duration-100"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 print:p-0 print:bg-white print:static print:overflow-visible"
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 flex items-center justify-center p-3 sm:p-4 print:p-0 print:bg-white print:static print:overflow-visible"
              style="display: none;">
             
             <div @click.away="showCetakModal = false"
-                 class="relative bg-white rounded-3xl shadow-2xl border border-gray-150 w-full max-w-4xl max-h-[95vh] overflow-y-auto print:max-h-none print:shadow-none print:border-0 print:rounded-none print:w-full print:max-w-none">
+                 class="relative bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-4xl max-h-[95vh] overflow-y-auto print:max-h-none print:shadow-none print:border-0 print:rounded-none print:w-full print:max-w-none">
                 
                 <!-- Action Bar (Hidden when printing) -->
-                <div class="sticky top-0 z-20 bg-gray-900 text-white px-6 py-4 flex items-center justify-between print:hidden rounded-t-3xl">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <div class="sticky top-0 z-20 bg-slate-900 text-white px-5 py-3 flex items-center justify-between print:hidden rounded-t-lg border-b border-slate-800">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded bg-slate-800 text-teal-400 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm">Pratinjau Dokumen Rekam Medis</h4>
-                            <p class="text-xs text-gray-400">Siap dicetak atau diekspor ke PDF resmi klinik.</p>
+                            <h4 class="font-bold text-xs text-white">Pratinjau Dokumen Rekam Medis</h4>
+                            <p class="text-[10px] text-slate-400">Siap dicetak atau diekspor ke PDF resmi klinik LPSK.</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button @click="executePrint()" class="btn-primary py-2 px-4 text-xs font-bold shadow flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                            Cetak Sekarang (Print / PDF)
+                        <button @click="executePrint()" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-600 text-white text-xs font-semibold rounded shadow-2xs flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            <span>Cetak Sekarang (Print / PDF)</span>
                         </button>
-                        <button @click="showCetakModal = false" class="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <button @click="showCetakModal = false" class="p-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
                 </div>

@@ -16,9 +16,9 @@ new class extends Component
     <div class="relative bg-white border-t border-gray-100 shadow-[0_-2px_15px_rgba(0,0,0,0.04)] px-4 pt-2 pb-4 flex justify-around items-end">
         
         <!-- Beranda -->
-        <a href="{{ route('patient.dashboard') }}" class="flex flex-col items-center gap-0.5 min-w-[56px] {{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') ? 'text-emerald-600' : 'text-gray-400' }}" wire:navigate>
-            <svg class="w-6 h-6" fill="{{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="{{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') ? '0' : '1.8' }}">
-                @if(request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard'))
+        <a href="{{ route('patient.dashboard') }}" class="flex flex-col items-center gap-0.5 min-w-[56px] {{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') || request()->is('pasien*') ? 'text-emerald-600' : 'text-gray-400' }}" wire:navigate>
+            <svg class="w-6 h-6" fill="{{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') || request()->is('pasien*') ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="{{ request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') || request()->is('pasien*') ? '0' : '1.8' }}">
+                @if(request()->routeIs('patient.dashboard') || request()->routeIs('dashboard') || request()->routeIs('pasien.dashboard') || request()->is('pasien*'))
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 @else
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -27,24 +27,24 @@ new class extends Component
             <span class="text-[10px] font-semibold">Beranda</span>
         </a>
 
-        <!-- Antrian -->
-        <a href="{{ route('antrian.index') }}" class="flex flex-col items-center gap-0.5 min-w-[56px] {{ request()->routeIs('antrian.*') ? 'text-emerald-600' : 'text-gray-400' }}" wire:navigate>
+        <!-- Daftar Berobat -->
+        <a href="{{ route('antrian.index', ['modal' => 'daftar']) }}" class="flex flex-col items-center gap-0.5 min-w-[56px] {{ request()->routeIs('antrian.*') && (request('modal') === 'daftar' || request('modal') === 'tambah') ? 'text-emerald-600' : 'text-gray-400' }}" wire:navigate>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="text-[10px] font-semibold">Antrian</span>
+            <span class="text-[10px] font-semibold">Daftar</span>
         </a>
 
-        <!-- Floating QR/Scan Center Button -->
+        <!-- Floating Antrean Saya Center Button -->
         <div class="relative -top-5">
-            <a href="{{ route('antrian.detail') }}" class="flex items-center justify-center w-14 h-14 bg-emerald-600 rounded-full shadow-lg shadow-emerald-600/30 text-white hover:bg-emerald-700 transition-all hover:scale-105 border-4 border-white" wire:navigate>
+            <a href="{{ route('antrian.index') }}" title="Antrean Saya" class="flex items-center justify-center w-14 h-14 bg-emerald-600 rounded-full shadow-lg shadow-emerald-600/30 text-white hover:bg-emerald-700 transition-all hover:scale-105 border-4 border-white" wire:navigate>
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm11-2h1v1h-1v-1zm-3 0h1v3h-1v-3zm5 0h1v1h-1v-1zm-1 2h1v1h-1v-1zm2 0h1v3h-1v-3zm-4 2h2v1h-2v-1zm2 1h1v1h-1v-1z"/>
                 </svg>
             </a>
         </div>
 
-        <!-- Jadwal -->
+        <!-- Jadwal Kunjungan -->
         <a href="{{ route('jadwal.index') }}" class="flex flex-col items-center gap-0.5 min-w-[56px] {{ request()->routeIs('jadwal.*') ? 'text-emerald-600' : 'text-gray-400' }}" wire:navigate>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>

@@ -1,13 +1,20 @@
+@php
+    $user = auth()->user();
+    $isStaff = $user && $user->hasAnyRole(['Super Admin', 'Admin Klinik', 'Dokter', 'Perawat', 'Fisioterapis', 'Apoteker', 'Approver']);
+@endphp
+
 <x-app-layout>
     <div x-data="{ 
         init() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-pasien') {
+            if (urlParams.get('modal') === 'tambah' || urlParams.get('modal') === 'tambah-pasien' || urlParams.get('modal') === 'daftar') {
                 this.showTambahPasienModal = true;
             }
+            @if($isStaff)
             if (urlParams.get('modal') === 'panggil') {
                 this.showPanggilAntrianModal = true;
             }
+            @endif
         },
         showTambahPasienModal: false, 
         showPanggilAntrianModal: false, 
@@ -24,7 +31,7 @@
             {no: 'B-007', name: 'Indra Wijaya', poli: 'Poli Gigi', doctor: 'drg. Hendra P.', status: 'Selesai', wait_time: '-', status_color: 'green'},
         ],
         newPatient: {
-            name: '',
+            name: '{{ $isStaff ? '' : addslashes(auth()->user()?->name ?? '') }}',
             poli: 'Poli Umum',
             doctor: 'dr. Rina Kusuma',
             type: 'Pasien Umum'
@@ -96,7 +103,6 @@
                 status_color: 'yellow'
             });
 
-            this.newPatient.name = '';
             this.showTambahPasienModal = false;
 
             window.dispatchEvent(new CustomEvent('notify', {
@@ -104,6 +110,7 @@
             }));
         },
         triggerCall(queueNo) {
+            @if($isStaff)
             this.callingNumber = queueNo;
             this.showPanggilAntrianModal = true;
             this.playNotification();
@@ -122,8 +129,10 @@
             window.dispatchEvent(new CustomEvent('notify', {
                 detail: { type: 'info', title: 'Panggilan Antrian', message: 'Memanggil nomor ' + queueNo + ' menuju ruang pemeriksaan.' }
             }));
+            @endif
         },
         callNextAvailable() {
+            @if($isStaff)
             // Find first queue with status 'Menunggu'
             let nextQ = this.queues.slice().reverse().find(q => q.status === 'Menunggu');
             if (nextQ) {
@@ -133,14 +142,17 @@
                     detail: { type: 'warning', title: 'Antrian Kosong', message: 'Tidak ada antrian dengan status menunggu saat ini.' }
                 }));
             }
+            @endif
         },
         finishQueue(queueNo) {
+            @if($isStaff)
             let qIndex = this.queues.findIndex(q => q.no === queueNo);
             if (qIndex !== -1) {
                 this.queues[qIndex].status = 'Selesai';
                 this.queues[qIndex].status_color = 'green';
                 this.queues[qIndex].wait_time = '-';
             }
+            @endif
         },
         get filteredQueues() {
             return this.queues.filter(q => {
@@ -150,105 +162,128 @@
             });
         }
     }"
-    x-on:open-modal.window="if ($event.detail.name === 'tambah-pasien' || $event.detail.name === 'tambah') showTambahPasienModal = true; if ($event.detail.name === 'panggil-antrian' || $event.detail.name === 'panggil') showPanggilAntrianModal = true;"
+    x-on:open-modal.window="if ($event.detail.name === 'tambah-pasien' || $event.detail.name === 'tambah' || $event.detail.name === 'daftar') showTambahPasienModal = true; @if($isStaff) if ($event.detail.name === 'panggil-antrian' || $event.detail.name === 'panggil') showPanggilAntrianModal = true; @endif"
     >
 
         <!-- Top Header & Action Buttons -->
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-200">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 leading-tight">Antrian Hari Ini</h2>
-                <p class="text-gray-500 mt-1">Pantau status antrian pasien secara real-time.</p>
+                <h2 class="text-lg font-bold text-slate-900 leading-tight">
+                    @if($isStaff)
+                        Manajemen Antrean Klinik
+                    @else
+                        Antrean Layanan Pasien
+                    @endif
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    @if($isStaff)
+                        Monitoring kedatangan pasien dan kontrol pemanggilan loket pemeriksaan.
+                    @else
+                        Status antrean berjalan dan pendaftaran tiket konsultasi dokter.
+                    @endif
+                </p>
             </div>
-            <div class="flex items-center gap-3 font-sans">
-                <button @click="showTambahPasienModal = true" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-emerald-600 font-semibold rounded-xl border border-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all duration-200 text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Tambah Pasien
-                </button>
-                <button @click="callNextAvailable()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all duration-200 text-sm shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-                    </svg>
-                    Panggil Antrian
-                </button>
+            <div class="flex items-center gap-2 font-sans">
+                @if($isStaff)
+                    <button @click="showTambahPasienModal = true" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 font-medium rounded-md border border-slate-300 hover:bg-slate-50 transition-colors text-xs cursor-pointer shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span>Registrasi Antrean</span>
+                    </button>
+                    <button @click="callNextAvailable()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-teal-700 text-white font-medium rounded-md hover:bg-teal-800 transition-colors text-xs shadow-2xs cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                        </svg>
+                        <span>Panggil Berikutnya</span>
+                    </button>
+                @else
+                    <button @click="showTambahPasienModal = true" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-teal-700 text-white font-medium rounded-md hover:bg-teal-800 transition-colors text-xs shadow-2xs cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span>Daftar Berobat</span>
+                    </button>
+                @endif
             </div>
         </div>
 
         <!-- Filter & Search Bar -->
-        <div class="bg-white rounded-2xl border border-gray-150 p-4 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+        <div class="bg-white rounded-lg border border-slate-200 p-3 mb-5 flex flex-col md:flex-row gap-3 justify-between items-center shadow-2xs">
+            <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto">
                 <template x-for="poli in ['Semua Poli', 'Poli Umum', 'Poli Gigi', 'Poli Anak']">
                     <button @click="currentFilter = poli" 
-                            :class="currentFilter === poli ? 'bg-emerald-50 text-emerald-600 font-bold border-emerald-100' : 'text-gray-500 hover:bg-gray-50 border-transparent'" 
-                            class="px-4 py-2 rounded-xl border text-xs font-semibold whitespace-nowrap transition-colors"
+                            :class="currentFilter === poli ? 'bg-teal-50 text-teal-900 font-semibold border-teal-200' : 'text-slate-600 hover:bg-slate-50 border-slate-200'" 
+                            class="px-3 py-1.5 rounded-md border text-xs whitespace-nowrap transition-colors cursor-pointer"
                             x-text="poli">
                     </button>
                 </template>
             </div>
             <div class="relative w-full md:w-64">
-                <input x-model="searchQuery" type="text" placeholder="Cari nama atau no antrian..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input x-model="searchQuery" type="text" placeholder="Cari nama atau nomor tiket..." class="w-full pl-8 pr-3 py-1.5 rounded-md border border-slate-300 focus:outline-hidden focus:ring-1 focus:ring-teal-600 focus:border-teal-600 text-xs">
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
         </div>
 
         <!-- Active Queues Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <template x-for="q in filteredQueues" :key="q.no">
-                <div class="bg-white rounded-3xl border border-gray-150 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between transition-all duration-200 hover:shadow-md relative overflow-hidden"
-                     :class="q.status === 'Diperiksa' ? 'border-l-4 border-l-blue-500' : (q.status === 'Selesai' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-amber-500')">
+                <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition-colors">
                     
                     <!-- Card Header -->
-                    <div class="flex justify-between items-start mb-4">
+                    <div class="flex justify-between items-start mb-3 pb-2.5 border-b border-slate-100">
                         <div>
-                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1" x-text="q.poli"></div>
-                            <div class="text-3xl font-black text-gray-900 tracking-tight" x-text="q.no"></div>
+                            <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block" x-text="q.poli"></span>
+                            <span class="text-2xl font-bold font-mono text-slate-900 tracking-tight" x-text="q.no"></span>
                         </div>
                         
                         <!-- Status Badge -->
-                        <span :class="q.status === 'Diperiksa' ? 'bg-blue-50 text-blue-700 border-blue-200' : (q.status === 'Selesai' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200')"
-                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                        <span :class="q.status === 'Diperiksa' ? 'bg-blue-50 text-blue-800 border-blue-200' : (q.status === 'Selesai' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200')"
+                              class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border"
                               x-text="q.status">
                         </span>
                     </div>
                     
                     <!-- Card Details -->
-                    <div class="space-y-3 mb-5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 font-black text-xs" x-text="q.name.substring(0,2).toUpperCase()"></div>
-                            <div>
-                                <div class="text-sm font-bold text-gray-900 leading-tight" x-text="q.name"></div>
-                                <div class="text-[10px] text-gray-400">Pasien Terdaftar</div>
-                            </div>
+                    <div class="space-y-2 mb-4 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500">Pasien</span>
+                            <span class="font-medium text-slate-900" x-text="q.name"></span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-sm font-bold text-gray-900 leading-tight" x-text="q.doctor"></div>
-                                <div class="text-[10px] text-gray-400">Dokter Bertugas</div>
-                            </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500">Dokter</span>
+                            <span class="text-slate-700" x-text="q.doctor"></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500">Estimasi Tunggu</span>
+                            <span class="font-mono text-slate-700" x-text="q.wait_time"></span>
                         </div>
                     </div>
 
                     <!-- Card Actions -->
-                    <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
-                        <div class="text-xs text-gray-400">
-                            Waktu: <span class="font-bold text-gray-700" x-text="q.wait_time"></span>
-                        </div>
-                        <div class="flex gap-2">
-                            <template x-if="q.status === 'Menunggu'">
-                                <button @click="triggerCall(q.no)" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 py-1.5 px-3 rounded-lg shadow-sm transition-colors">
-                                    Panggil
-                                </button>
-                            </template>
-                            <template x-if="q.status === 'Diperiksa'">
-                                <button @click="finishQueue(q.no)" class="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 py-1.5 px-3 rounded-lg shadow-sm transition-colors">
-                                    Selesaikan
-                                </button>
-                            </template>
-                        </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">Loket Aktif</span>
+                        @if($isStaff)
+                            <div class="flex gap-1.5">
+                                <template x-if="q.status === 'Menunggu'">
+                                    <button @click="triggerCall(q.no)" class="text-[11px] font-medium text-white bg-teal-700 hover:bg-teal-800 py-1 px-2.5 rounded transition-colors cursor-pointer shadow-2xs">
+                                        Panggil
+                                    </button>
+                                </template>
+                                <template x-if="q.status === 'Diperiksa'">
+                                    <button @click="finishQueue(q.no)" class="text-[11px] font-medium text-white bg-slate-800 hover:bg-slate-900 py-1 px-2.5 rounded transition-colors cursor-pointer shadow-2xs">
+                                        Selesaikan
+                                    </button>
+                                </template>
+                            </div>
+                        @else
+                            <div>
+                                <span class="text-[10px] font-medium px-2 py-0.5 rounded"
+                                      :class="q.status === 'Diperiksa' ? 'bg-blue-50 text-blue-800' : (q.status === 'Selesai' ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700')">
+                                    <span x-text="q.status === 'Diperiksa' ? 'Sedang Dilayani' : (q.status === 'Selesai' ? 'Selesai' : 'Dalam Antrean')"></span>
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </template>
@@ -256,37 +291,52 @@
 
         <!-- ================= MODALS ================= -->
 
-        <!-- 1. Tambah Pasien Modal -->
+        <!-- 1. Tambah Pasien / Daftar Berobat Modal -->
         <div x-show="showTambahPasienModal" 
-             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50"
              style="display: none;"
              x-transition>
-            <div @click.away="showTambahPasienModal = false" class="bg-white w-full max-w-md rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-emerald-50">
-                    <h3 class="font-extrabold text-gray-900 text-lg">Registrasi Antrian Baru</h3>
-                    <button @click="showTambahPasienModal = false" class="text-gray-400 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <div @click.away="showTambahPasienModal = false" class="bg-white w-full max-w-md rounded-lg shadow-xl border border-slate-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <div>
+                        <h3 class="font-semibold text-slate-900 text-sm">
+                            @if($isStaff)
+                                Registrasi Antrean Baru
+                            @else
+                                Pendaftaran Kunjungan Berobat
+                            @endif
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            @if($isStaff)
+                                Penerbitan nomor antrean loket periksa klinik
+                            @else
+                                Ambil nomor tiket antrean pemeriksaan dokter secara online
+                            @endif
+                        </p>
+                    </div>
+                    <button @click="showTambahPasienModal = false" class="text-slate-400 hover:text-slate-700 cursor-pointer p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <form @submit.prevent="addPatientSubmit()" class="p-6 space-y-4 font-sans">
+                <form @submit.prevent="addPatientSubmit()" class="p-5 space-y-3 font-sans">
                     <!-- Name -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nama Pasien</label>
-                        <input x-model="newPatient.name" type="text" placeholder="Masukkan nama pasien" required class="w-full py-3 px-4 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Nama Pasien <span class="text-rose-600">*</span></label>
+                        <input x-model="newPatient.name" type="text" placeholder="Masukkan nama lengkap pasien" required class="w-full py-1.5 px-3 rounded-md border border-slate-300 focus:outline-hidden focus:ring-1 focus:ring-teal-600 focus:border-teal-600 text-xs">
                     </div>
                     <!-- Poli Selection -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Poli Klinik</label>
-                        <select x-model="newPatient.poli" @change="updateDoctors()" class="w-full py-3 px-4 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm bg-white">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Poli Tujuan <span class="text-rose-600">*</span></label>
+                        <select x-model="newPatient.poli" @change="updateDoctors()" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 focus:outline-hidden focus:ring-1 focus:ring-teal-600 focus:border-teal-600 text-xs bg-white">
                             <option value="Poli Umum">Poli Umum</option>
-                            <option value="Poli Gigi">Poli Gigi</option>
-                            <option value="Poli Anak">Poli Anak</option>
+                            <option value="Poli Gigi">Poli Gigi & Mulut</option>
+                            <option value="Poli Anak">Poli Anak (Pediatri)</option>
                         </select>
                     </div>
                     <!-- Doctor -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Dokter Pemeriksa</label>
-                        <select x-model="newPatient.doctor" class="w-full py-3 px-4 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm bg-white">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Dokter Pemeriksa <span class="text-rose-600">*</span></label>
+                        <select x-model="newPatient.doctor" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 focus:outline-hidden focus:ring-1 focus:ring-teal-600 focus:border-teal-600 text-xs bg-white">
                             <template x-for="doc in doctorsMap[newPatient.poli]">
                                 <option :value="doc" x-text="doc"></option>
                             </template>
@@ -294,59 +344,63 @@
                     </div>
                     <!-- Type -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Jenis Pasien</label>
-                        <select x-model="newPatient.type" class="w-full py-3 px-4 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm bg-white">
-                            <option value="Pasien Umum">Pasien Umum</option>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Skema Penjaminan <span class="text-rose-600">*</span></label>
+                        <select x-model="newPatient.type" class="w-full py-1.5 px-2.5 rounded-md border border-slate-300 focus:outline-hidden focus:ring-1 focus:ring-teal-600 focus:border-teal-600 text-xs bg-white">
+                            <option value="Pasien Umum">Pasien Umum / Mandiri</option>
                             <option value="Pasien BPJS/LPSK">Pasien BPJS / LPSK</option>
                         </select>
                     </div>
 
-                    <div class="pt-4 flex gap-3">
-                        <button type="button" @click="showTambahPasienModal = false" class="flex-1 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-xl text-sm transition-colors hover:bg-gray-50">
+                    <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                        <button type="button" @click="showTambahPasienModal = false" class="px-3 py-1.5 bg-white text-slate-700 font-medium border border-slate-300 rounded-md text-xs hover:bg-slate-50 cursor-pointer">
                             Batal
                         </button>
-                        <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-sm transition-colors hover:bg-emerald-700">
-                            Daftarkan Pasien
+                        <button type="submit" class="px-4 py-1.5 bg-teal-700 text-white font-medium rounded-md text-xs shadow-2xs hover:bg-teal-800 transition-colors cursor-pointer">
+                            @if($isStaff)
+                                Daftarkan Pasien
+                            @else
+                                Konfirmasi & Ambil Tiket
+                            @endif
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- 2. Panggil Antrian Modal (Simulasi) -->
+        @if($isStaff)
+        <!-- 2. Panggil Antrian Modal (Khusus Admin / Petugas Medis) -->
         <div x-show="showPanggilAntrianModal" 
-             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50"
              style="display: none;"
              x-transition>
-            <div @click.away="showPanggilAntrianModal = false" class="bg-white w-full max-w-sm rounded-3xl shadow-xl border border-gray-100 overflow-hidden text-center p-6">
-                <!-- Megaphone Animated Icon -->
-                <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100"
-                     :class="callSoundPlaying ? 'animate-ping' : ''">
-                    <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <div @click.away="showPanggilAntrianModal = false" class="bg-white w-full max-w-sm rounded-lg shadow-xl border border-slate-200 overflow-hidden text-center p-5">
+                <div class="w-10 h-10 bg-teal-50 border border-teal-200 rounded-full flex items-center justify-center mx-auto mb-3 text-teal-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                     </svg>
                 </div>
                 
-                <h3 class="font-extrabold text-gray-900 text-lg mb-1">Memanggil Antrian</h3>
-                <p class="text-xs text-gray-400 mb-4">Pengeras Suara Klinik LPSK Aktif</p>
+                <h3 class="font-semibold text-slate-900 text-sm mb-0.5">Pemanggilan Antrean</h3>
+                <p class="text-[11px] text-slate-500 mb-4">Pengeras suara loket klinik aktif</p>
                 
                 <!-- Display Queue Number -->
-                <div class="bg-emerald-50/50 rounded-2xl py-6 mb-6 border border-emerald-100">
-                    <div class="text-4xl font-black text-emerald-600 tracking-wider" x-text="callingNumber"></div>
-                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Harap Menuju Loket Poli</div>
+                <div class="bg-slate-50 rounded-md py-4 mb-4 border border-slate-200">
+                    <div class="text-3xl font-bold font-mono text-teal-800 tracking-wider" x-text="callingNumber"></div>
+                    <div class="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-1">Harap Menuju Loket Poli</div>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                    <button @click="playNotification()" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 18.75V21m-6-6h1.5L12 18.75V5.25L7.5 9H6a1 1 0 00-1 1v4a1 1 0 001 1z"/></svg>
-                        Bunyikan Bell
+                <div class="flex gap-2">
+                    <button @click="playNotification()" class="flex-1 py-1.5 bg-teal-700 text-white font-medium rounded-md text-xs hover:bg-teal-800 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 18.75V21m-6-6h1.5L12 18.75V5.25L7.5 9H6a1 1 0 00-1 1v4a1 1 0 001 1z"/></svg>
+                        <span>Bunyikan Chime</span>
                     </button>
-                    <button @click="showPanggilAntrianModal = false" class="w-full py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-xl text-sm transition-colors hover:bg-gray-50">
+                    <button @click="showPanggilAntrianModal = false" class="px-3 py-1.5 bg-white text-slate-700 font-medium border border-slate-300 rounded-md text-xs hover:bg-slate-50 cursor-pointer">
                         Tutup
                     </button>
                 </div>
             </div>
         </div>
+        @endif
 
     </div>
 </x-app-layout>

@@ -696,6 +696,7 @@
                         <li><a href="{{ route('patient.dashboard') }}" class="hover:text-emerald-400 transition-colors">Portal Pasien</a></li>
                         <li><a href="#poliklinik" class="hover:text-emerald-400 transition-colors">Jadwal Poliklinik</a></li>
                         <li><a href="#alur" class="hover:text-emerald-400 transition-colors">Alur Pelayanan Berobat</a></li>
+                        <li class="pt-1"><a href="{{ route('admin.login') }}" class="hover:text-emerald-400 transition-colors text-slate-400">Portal Petugas & Dokter &rarr;</a></li>
                     </ul>
                 </div>
 

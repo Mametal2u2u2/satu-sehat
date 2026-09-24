@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsAdmin
+class EnsureUserIsPatient
 {
     /**
      * Handle an incoming request.
@@ -16,6 +16,10 @@ class EnsureUserIsAdmin
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
 
         $adminRoles = [
             'Super Admin',
@@ -28,12 +32,14 @@ class EnsureUserIsAdmin
             'Approver',
         ];
 
-        if (! $user) {
-            return redirect()->route('admin.login');
+        // Reject if user is staff/admin and does not have the Pasien role
+        if ($user->hasAnyRole($adminRoles) && ! $user->hasRole('Pasien')) {
+            return redirect()->route('admin.dashboard')->with('error', 'Akses Ditolak: Akun staf/admin tidak memiliki hak akses ke Portal Pasien.');
         }
 
-        if (! $user->hasAnyRole($adminRoles)) {
-            return redirect()->route('patient.dashboard')->with('error', 'Akses Ditolak: Akun Anda tidak memiliki hak akses ke panel manajemen staf/admin.');
+        // Reject if user is not a patient
+        if (! $user->hasRole('Pasien')) {
+            return redirect()->route('admin.dashboard')->with('error', 'Akses Ditolak: Halaman ini khusus untuk Pasien.');
         }
 
         return $next($request);

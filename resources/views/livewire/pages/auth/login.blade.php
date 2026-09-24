@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Forms\LoginForm;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -10,7 +11,7 @@ new #[Layout('layouts.guest')] class extends Component
     public LoginForm $form;
 
     /**
-     * Handle an incoming authentication request.
+     * Handle an incoming authentication request for Patient Portal.
      */
     public function login(): void
     {
@@ -22,14 +23,19 @@ new #[Layout('layouts.guest')] class extends Component
 
         $user = auth()->user();
 
-        // Check user role and redirect accordingly
         $adminRoles = ['Super Admin', 'Admin Klinik', 'Dokter', 'Perawat', 'Apoteker', 'Approver', 'Fisioterapis'];
         
+        // Strict role validation: Admin/Petugas/Staff CANNOT log in via Patient Portal
         if ($user && $user->hasAnyRole($adminRoles)) {
-            $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
-        } else {
-            $this->redirectIntended(default: route('patient.dashboard', absolute: false), navigate: true);
+            Auth::guard('web')->logout();
+            Session::invalidate();
+            Session::regenerateToken();
+
+            $this->addError('form.login', 'Akun ini tidak memiliki akses ke Portal Pasien. Silakan gunakan Login Admin.');
+            return;
         }
+
+        $this->redirectIntended(default: route('patient.dashboard', absolute: false), navigate: true);
     }
 
     /**
@@ -85,6 +91,18 @@ new #[Layout('layouts.guest')] class extends Component
     </div>
 
     <form wire:submit="login" class="space-y-4" id="loginForm">
+        @if ($errors->has('form.login'))
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <span class="font-bold block text-rose-900">Akses Ditolak</span>
+                    <span>{{ $errors->first('form.login') }}</span>
+                </div>
+            </div>
+        @endif
+
         <!-- Email or Username -->
         <div>
             <x-input-label for="login" :value="__('Email atau Username')" class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" />
@@ -227,14 +245,23 @@ new #[Layout('layouts.guest')] class extends Component
             </a>
         </div>
 
-        <!-- Footer / Register Link -->
-        <div class="text-center pt-3 border-t border-slate-100">
+        <!-- Footer / Register & Admin Switch Link -->
+        <div class="text-center pt-3 border-t border-slate-100 space-y-2.5">
             <p class="text-xs text-slate-500">
                 Belum terdaftar sebagai pasien? 
                 <a href="{{ route('register') }}" class="text-emerald-700 hover:text-emerald-800 font-bold hover:underline" wire:navigate>
                     Daftar Akun Baru
                 </a>
             </p>
+            <div class="pt-1">
+                <a href="{{ route('admin.login') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-semibold bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-xl border border-slate-200 transition-colors" wire:navigate>
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span>Login sebagai Admin / Petugas</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+            </div>
         </div>
     </form>
 </div>
